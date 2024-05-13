@@ -21,3 +21,6 @@ class Message(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
     is_read = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['created']

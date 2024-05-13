@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 
-from .models import Thread
+from .models import Thread, Message
 
 User = get_user_model()
 
@@ -30,4 +30,15 @@ class CreateThreadSerializer(serializers.ModelSerializer):
 class ThreadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Thread
-        exclude = '__all__'
+        fields = '__all__'
+
+
+class CreateMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        exclude = ('sender', 'created', 'is_read')
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = '__all__'
