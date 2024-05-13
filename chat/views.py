@@ -28,11 +28,14 @@ class CreateThreadView(generics.CreateAPIView):
         user = request.user
         participant = User.objects.get(pk=participant_uuid)
 
+
+        # Checs if a thread already exists between the curent user and the participant
         thread = Thread.objects.filter(participants=user).filter(participants=participant)
         if thread.exists():
             serializer = CreateThreadSerializer(thread.first())
             return Response(serializer.data, status=status.HTTP_200_OK)
 
+        # create a new one and add participants If thread doesn't exist
         thread = Thread.objects.create()
         thread.participants.add(user, participant)
         serializer = CreateThreadSerializer(thread)
@@ -50,7 +53,9 @@ class DeleteThreadView(generics.DestroyAPIView):
 
         user = request.user
         if user not in instance.participants.all():
+            # Checks if the current user is not a participant of the thread
             raise PermissionDenied("You do not have permission to delete this thread.")
+        
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
     
@@ -86,6 +91,7 @@ class MessageListView(generics.ListAPIView):
         user = self.request.user
 
         for message in queryset:
+            # Marks unread messages as read if they were send by other users
             if not message.is_read and message.sender != user:
                 message.is_read = True
                 message.save()
@@ -99,8 +105,10 @@ class UnreadMessageCountView(generics.RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         user = request.user
+        # Retrieves threads in which the user participates
         threads = Thread.objects.filter(participants=user)
-        print(threads)
+
+        # Counts number of unread mesages in the threads
         unread_count = Message.objects.filter(thread__in=threads, is_read=False).count()
         return Response({'unread_count': unread_count}, status=status.HTTP_200_OK)
     
