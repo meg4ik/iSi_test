@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import LimitOffsetPagination
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 from .models import Thread, Message
 from .serializers import CreateThreadSerializer, ThreadSerializer, MessageSerializer, CreateMessageSerializer
@@ -90,3 +91,16 @@ class MessageListView(generics.ListAPIView):
                 message.save()
         
         return queryset
+    
+
+class UnreadMessageCountView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def retrieve(self, request, *args, **kwargs):
+        user = request.user
+        threads = Thread.objects.filter(participants=user)
+        print(threads)
+        unread_count = Message.objects.filter(thread__in=threads, is_read=False).count()
+        return Response({'unread_count': unread_count}, status=status.HTTP_200_OK)
+    
